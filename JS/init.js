@@ -19,7 +19,7 @@ function getData(Url) {
     var photosCounter = 0;
     var rowX = (width / 7);
     var rowY = 1;
-    var tmp = 1;
+    var rowXcounter = 1;
 
     $("#loading").show();
 
@@ -27,7 +27,7 @@ function getData(Url) {
         format: "json"
     })
       .done(function (data) {
-          // Open Box
+          // open Box
           $('.boxCover').addClass("openBoxCover");
 
           // wait for the box to be open
@@ -36,23 +36,23 @@ function getData(Url) {
               $.each(data.items, function (i, item) {
                   var wrapper = $("<div class=\"gallery-item wrapper" + i + "\">").css("top", (height - 100) + "px").appendTo("#gallery");
 
-                  // Appending the photos to the gallery
+                  // appending the photos to the gallery
                   setTimeout(function () {
 
                       var rotateSign = Math.floor((Math.random() * 2) + 1);
                       var rotateNum = Math.floor((Math.random() * 5) + 1);
                       var posY = (rowY * 22) + "px";
-                      var posX = (rowX * tmp) + "px";
+                      var posX = (rowX * rowXcounter) + "px";
                       var rotate;
 
                       if (((i + 1) % 5) === 0) {
                           rowY += 8;
-                          tmp = 0;
+                          rowXcounter = 0;
                       }
 
-                      tmp++;
+                      rowXcounter++;
 					  
-					  // Generate random rotate degree
+					  // generate random rotate degree
                       if (rotateSign == 1) rotate = rotateNum;
                       else rotate = "-" + rotateNum;
 
@@ -83,7 +83,7 @@ function getData(Url) {
                               duration: 'slow'
                           }, 'linear');
 
-                      // Add photo details
+                      // add photo details
                       $("<span class=\"photo-details hide\">").html(generateInfo(item)).appendTo(".wrapper" + i);
 
                       $(".wrapper" + i).hover(function () {
@@ -97,6 +97,7 @@ function getData(Url) {
       });
 }
 
+/* Creates the photo information */
 function generateInfo(item){
 	var info = "<h5>Title: " + (item.title.length > 30 ? item.title.substring(0, 27) + "..." : item.title) + "</h5>" +
                "<h6>Date: " + new Date(item.date_taken).toLocaleString() + "</h6>" +
@@ -106,8 +107,8 @@ function generateInfo(item){
 	return info;
 }
 
+/* Get photos by the given author */
 function showAuthor(author) {
-
     ClearGallery();
 
     setTimeout(function () {
@@ -117,9 +118,8 @@ function showAuthor(author) {
     }, 3000);
 }
 
+/* Get photos from flickr (with clear) */
 function loadFlickrAgain(Url) {
-    console.log("ccc");
-
     ClearGallery();
 
     setTimeout(function () {
@@ -129,6 +129,7 @@ function loadFlickrAgain(Url) {
     }, 3000);
 }
 
+/* Clear the gallery */
 function ClearGallery() {
     var rotate = "-100";
 
