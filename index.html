@@ -8,15 +8,24 @@
 <script>
 	var height = $(window).height();
 	var width = $(window).width();
-	
 	var totalPhotos = 20;
 	var flickerFeedUrl = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
+	var flickerFeedUrlAuthor = "http://api.flickr.com/services/feeds/photos_public.gne?id=AUTHORID&jsoncallback=?";
+	
+$( document ).ready(function() {
+    console.log( "ready!" );
+	
+	$('#loadFlickr').click(function() {
+		loadFlickrAgain(flickerFeedUrl);
+	});
 
-getData(flickerFeedUrl);
+	getData(flickerFeedUrl);
+});
+
 
 function getData(Url) {
 	var photosCounter = 0;
-	var rowX = 170;
+	var rowX = (width / 7);
 	var rowY = 1;
 	var tmp = 1;
 	
@@ -33,14 +42,15 @@ function getData(Url) {
 		setTimeout( function () {
 		
 		  $.each( data.items, function( i, item ) {
-			var wrapper = $( "<div class=\"gallery-item wrapper" + i + "\">").appendTo("#gallery");
+			var wrapper = $( "<div class=\"gallery-item wrapper" + i + "\">").css("top", (height-100) + "px").appendTo("#gallery");
 			
 			// Appending the photos to the gallery
 			setTimeout( function () {
-					var PosY =  (rowY*22)+ "px";
+					
 					var rotateSign = Math.floor((Math.random() * 2) + 1);
 					var rotateNum = Math.floor((Math.random() * 5) + 1);
-					var PosX = (rowX*tmp) + "px";
+					var posY = (rowY*22)+ "px";
+					var posX = (rowX*tmp) + "px";
 					var rotate;
 			
 					if (((i+1)%5)===0) { 
@@ -49,9 +59,6 @@ function getData(Url) {
 					}
 					
 					tmp++;
-					console.log(PosX + " = " + rowX + " " + tmp);
-
-					
 					if (rotateSign == 1) {
 						rotate = rotateNum;
 					}
@@ -60,15 +67,19 @@ function getData(Url) {
 					}
 			
 
-				$( "<img class=\"photo\">" ).attr( "src", item.media.m ).appendTo(".wrapper" + i).load(function() {
-					photosCounter++;
-					if (photosCounter === totalPhotos) $("#loading").hide();
+				$( "<img class=\"photo\">" ).attr( "src", item.media.m ).appendTo(".wrapper" + i).load(
+					function() {
+						photosCounter++;
+						if (photosCounter === totalPhotos) {
+							$("#loading").hide();
+							$('.boxCover').removeClass("openBoxCover");
+						}
 					}).parent().animate({
 						opacity: 1,
 						width : "150px",
 						height : "150px",
-						left: PosX,
-						top:PosY
+						left: posX,
+						top:posY
 					}, 
 					{
 						step: function(now,fx) {
@@ -81,12 +92,12 @@ function getData(Url) {
 						  $(this).css('transform','rotate(' + rotate + 'deg)');  
 						},
 						duration:'slow'
-					},'linear').css("top",height-100);
+					},'linear');
 				
 				// add photo details
 				$( "<span class=\"photo-details hide\">" ).html(
 					"Title: " + (item.title.length > 30 ? item.title.substring(0,27) + "..." : item.title) + 
-					"<br/> Date: " + item.date_taken + 
+					"<br/> Date: " + new Date(item.date_taken).toLocaleString() + 
 					"<br/> Author: <a href=\"#\" onclick=\"showAuthor('" + item.author_id + "')\">" + item.author.substring(item.author.indexOf("(")+1,item.author.indexOf(")")) + "</a>" + 
 					"<br/> Link: <a href=\"" + item.media.m + "\">Click Here</a>")
 					.appendTo(".wrapper" + i);
@@ -96,44 +107,60 @@ function getData(Url) {
 					$(this).find('img').toggleClass("fade");
 				});
 				
-			}, (i * 500));
+			}, (i * 100));
 		  });
-		  
-		  }, 1000);
-		  
+		  }, 300);
 		});
 	}
 	
 	function showAuthor(author) {
-		$('#gallery').find('.gallery-item').each(function() {
-				var rotate = '-70';
-				$(this).animate({
-					opacity: 1,
-					width : "150px",
-					height : "150px",
-					top: (height + 100) + "px"
+
+		ClearGallery();
+		
+		setTimeout(function() {
+			// Clear Gallery
+			$('.gallery-item').remove();
+			getData(flickerFeedUrlAuthor.replace("AUTHORID", author));
+		},3000);
+	}
+	
+	function loadFlickrAgain(Url) {
+		console.log("ccc");
+
+		ClearGallery();
+		
+		setTimeout(function() {
+			// Clear Gallery
+			$('.gallery-item').remove();
+			getData(Url);
+		},3000);
+	}
+	
+	function ClearGallery() {
+		var rotate = "-100";
+			
+		$.each([ 12,3,7,18,5,0,16,6,1,17,11,2,10,4,8,13,9,14,15,19], function( index, value ) {
+			setTimeout(function() {
+				$('.wrapper' + value).animate({
+						width : "150px",
+						height : "150px",
+						opacity: "0",
+						top:height
 					}, 
 					{
 						step: function(now,fx) {
-						  $(this).css('-webkit-transform','rotate(' + rotate + 'deg)');
-						  $(this).css('-moz-transform','rotate(' + rotate + 'deg)'); 
-						  $(this).css('-ms-transform','rotate(' + rotate + 'deg)');
-						  $(this).css('-o-transform','rotate(' + rotate + 'deg)');
-						  $(this).css('transform','rotate(' + rotate + 'deg)');  
+						   $(this).css('padding','5px 5px 5px 5px');
+						   $(this).css('background-color','white');
+						   $(this).css('-webkit-transform','rotate(' + rotate + 'deg)');
+						   $(this).css('-moz-transform','rotate(' + rotate + 'deg)'); 
+						   $(this).css('-ms-transform','rotate(' + rotate + 'deg)');
+						   $(this).css('-o-transform','rotate(' + rotate + 'deg)');
+						   $(this).css('transform','rotate(' + rotate + 'deg)');  
 						},
 						duration:'slow'
 					},'linear');
+			},(index*100));
 		});
-		
-		
-		
-		setTimeout(function() {
-		// Clear Gallery
-		$('#gallery').find('.gallery-item').each(function() {
-			$(this).css("display","none");
-		});
-		getData(flickerFeedUrl);
-		},500);
 	}
 </script>
 
@@ -159,6 +186,12 @@ body {
     width: 0px;
     height: 0px;
     margin: 0px;
+}
+
+#loadFlickr {
+	float: right;
+	right:-5px;
+	top:20px;
 }
 
 .photo {
@@ -240,62 +273,33 @@ a.loading:hover{
 }
 
 
-.button {
-	float: right;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
-    -webkit-box-shadow:    0 4px 0 #c5376d, 0 15px 20px rgba(0, 0, 0, .35);
-    -moz-box-shadow: 0 8px 0 #c5376d, 0 15px 20px rgba(0, 0, 0, .35);
-    box-shadow: 0 8px 0 #c5376d, 0 15px 20px rgba(0, 0, 0, .35);
-    -webkit-transition: -webkit-box-shadow .1s ease-in-out;
-    -moz-transition: -moz-box-shadow .1s ease-in-out;
-    -o-transition: -o-box-shadow .1s ease-in-out;
-    transition: box-shadow .1s ease-in-out;
-    font-size: 30px;
-    color: #fff;
-}
-
-.button span {
-    display: inline-block;
-    padding: 20px 30px;
-    background-color: #ec528d;
-    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(hsla(338, 90%, 80%, .8)), to(hsla(338, 90%, 70%, .2)));
-    background-image: -webkit-linear-gradient(hsla(338, 90%, 80%, .8), hsla(338, 90%, 70%, .2));
-    background-image: -moz-linear-gradient(hsla(338, 90%, 80%, .8), hsla(338, 90%, 70%, .2));
-    background-image: -o-linear-gradient(hsla(338, 90%, 80%, .8), hsla(338, 90%, 70%, .2));
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    border-radius: 8px;
-    -webkit-box-shadow: inset 0 -1px 1px rgba(255, 255, 255, .15);
-    -moz-box-shadow: inset 0 -1px 1px rgba(255, 255, 255, .15);
-    box-shadow: inset 0 -1px 1px rgba(255, 255, 255, .15);
-    font-family: 'Pacifico', Arial, sans-serif;
-    line-height: 1;
-    text-shadow: 0 -1px 1px rgba(175, 49, 95, .7);
-    -webkit-transition: background-color .2s ease-in-out, -webkit-transform .1s ease-in-out;
-    -moz-transition: background-color .2s ease-in-out, -moz-transform .1s ease-in-out;
-    -o-transition: background-color .2s ease-in-out, -o-transform .1s ease-in-out;
-    transition: background-color .2s ease-in-out, transform .1s ease-in-out;
-}
-
-.button:hover span {
-    background-color: #ec6a9c;
-    text-shadow: 0 -1px 1px rgba(175, 49, 95, .9), 0 0 5px rgba(255, 255, 255, .8);
-}
-
-.button:active, .button:focus {
-    -webkit-box-shadow:    0 8px 0 #c5376d, 0 12px 10px rgba(0, 0, 0, .3);
-    -moz-box-shadow: 0 8px 0 #c5376d, 0 12px 10px rgba(0, 0, 0, .3);
-    box-shadow:    0 8px 0 #c5376d, 0 12px 10px rgba(0, 0, 0, .3);
-}
-
-.button:active span {
-    -webkit-transform: translate(0, 4px);
-    -moz-transform: translate(0, 4px);
-    -o-transform: translate(0, 4px);
-    transform: translate(0, 4px);
-}
+button, .button {
+  border-style: solid;
+  border-width: 0px;
+  cursor: pointer;
+  font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  line-height: normal;
+  margin: 0 0 1.25rem;
+  position: relative;
+  text-decoration: none;
+  text-align: center;
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+  display: inline-block;
+  padding-top: 1rem;
+  padding-right: 2rem;
+  padding-bottom: 1.0625rem;
+  padding-left: 2rem;
+  font-size: 1rem;
+  background-color: #008cba;
+  border-color: #007095;
+  color: white;
+  transition: background-color 300ms ease-out; }
+  button:hover, button:focus, .button:hover, .button:focus {
+    background-color: #007095; }
+  button:hover, button:focus, .button:hover, .button:focus {
+    color: white; }
 </style>
 
 </head>
@@ -304,9 +308,7 @@ a.loading:hover{
 		<a id="loading" href="#" class="loading"></a>
 	</div>
 			
-	<a href="#" class="button">
-		<span>Load Flickr</span>
-	</a>
+		<button id="loadFlickr">Load Flickr</button>
 	
 	<div id="gallery"></div>
 	<div id="box">
