@@ -6,43 +6,51 @@
   <script src="jquery-2.1.1.min.js"></script>
   
 <script>
-var photosSize = 19;
-$("#loading").show();
-
-(function() {
-	var photosCounter = 0;
+	var height = $(window).height();
+	var width = $(window).width();
+	
 	var totalPhotos = 20;
 	var flickerFeedUrl = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
-	var rowX = 150;
+
+getData(flickerFeedUrl);
+
+function getData(Url) {
+	var photosCounter = 0;
+	var rowX = 170;
 	var rowY = 1;
 	var tmp = 1;
 	
-	  $.getJSON(flickerFeedUrl,{
+	$("#loading").show();
+	
+	  $.getJSON(Url,{
 		format: "json"
 	  })
 		.done(function( data ) {
-		
+		// Open Box
 		$('.boxCover').addClass("openBoxCover");
 		
 		// wait for the box to be open
 		setTimeout( function () {
 		
 		  $.each( data.items, function( i, item ) {
+			var wrapper = $( "<div class=\"gallery-item wrapper" + i + "\">").appendTo("#gallery");
+			
 			// Appending the photos to the gallery
 			setTimeout( function () {
-				var wrapper = $( "<span class=\"gallery-item\">").appendTo("#gallery");
-				alert(JSON.stringify(item));
-				$( "<img class=\"photo\">" ).attr( "src", item.media.m ).appendTo( ".gallery-item:last-child" ).load(function() {
-					photosCounter++;
-					//$(this).addClass("animate popInFromBox");
-					if (photosCounter === totalPhotos) $("#loading").hide();
-					
-					tmp++;
-					var PosX = (rowX*tmp) + "px";
-					var PosY =  (rowY*20)+ "px";
+					var PosY =  (rowY*22)+ "px";
 					var rotateSign = Math.floor((Math.random() * 2) + 1);
 					var rotateNum = Math.floor((Math.random() * 5) + 1);
+					var PosX = (rowX*tmp) + "px";
 					var rotate;
+			
+					if (((i+1)%5)===0) { 
+						rowY+=8;
+						tmp = 0;
+					}
+					
+					tmp++;
+					console.log(PosX + " = " + rowX + " " + tmp);
+
 					
 					if (rotateSign == 1) {
 						rotate = rotateNum;
@@ -50,13 +58,60 @@ $("#loading").show();
 					else {
 						rotate = "-" + rotateNum;
 					}
-					
-					$(this).parent().animate({
+			
+
+				$( "<img class=\"photo\">" ).attr( "src", item.media.m ).appendTo(".wrapper" + i).load(function() {
+					photosCounter++;
+					if (photosCounter === totalPhotos) $("#loading").hide();
+					}).parent().animate({
+						opacity: 1,
+						width : "150px",
+						height : "150px",
+						left: PosX,
+						top:PosY
+					}, 
+					{
+						step: function(now,fx) {
+						  $(this).css('padding','5px 5px 5px 5px');
+						  $(this).css('background-color','white');
+						  $(this).css('-webkit-transform','rotate(' + rotate + 'deg)');
+						  $(this).css('-moz-transform','rotate(' + rotate + 'deg)'); 
+						  $(this).css('-ms-transform','rotate(' + rotate + 'deg)');
+						  $(this).css('-o-transform','rotate(' + rotate + 'deg)');
+						  $(this).css('transform','rotate(' + rotate + 'deg)');  
+						},
+						duration:'slow'
+					},'linear').css("top",height-100);
+				
+				// add photo details
+				$( "<span class=\"photo-details hide\">" ).html(
+					"Title: " + (item.title.length > 30 ? item.title.substring(0,27) + "..." : item.title) + 
+					"<br/> Date: " + item.date_taken + 
+					"<br/> Author: <a href=\"#\" onclick=\"showAuthor('" + item.author_id + "')\">" + item.author.substring(item.author.indexOf("(")+1,item.author.indexOf(")")) + "</a>" + 
+					"<br/> Link: <a href=\"" + item.media.m + "\">Click Here</a>")
+					.appendTo(".wrapper" + i);
+				
+				$(".wrapper" + i).hover(function() {
+					$(this).find('.photo-details').toggleClass("hide");
+					$(this).find('img').toggleClass("fade");
+				});
+				
+			}, (i * 500));
+		  });
+		  
+		  }, 1000);
+		  
+		});
+	}
+	
+	function showAuthor(author) {
+		$('#gallery').find('.gallery-item').each(function() {
+				var rotate = '-70';
+				$(this).animate({
 					opacity: 1,
 					width : "150px",
 					height : "150px",
-					left: PosX,
-					top:PosY
+					top: (height + 100) + "px"
 					}, 
 					{
 						step: function(now,fx) {
@@ -68,34 +123,18 @@ $("#loading").show();
 						},
 						duration:'slow'
 					},'linear');
-					
-				  
-				  if (((i+1)%5)===0) { 
-						rowY+=7;
-						tmp = 1;
-					}
-				});
-				
-				// add photo details
-				$( "<span class=\"photo-details hide\">" ).html(
-					"Title: " + (item.title.length > 30 ? item.title.substring(0,27) + "..." : item.title) + 
-					"<br/> Date: " + item.date_taken + 
-					"<br/> Author: <a href=\"showAuthor(" + item.author_id + ")\">" + item.author.substring(item.author.indexOf("(")+1,item.author.indexOf(")")) + "</a>" + 
-					"<br/> Link: <a href=\"" + item.media.m + "\">Click Here</a>")
-					.appendTo( ".gallery-item:last-child" );
-				
-				wrapper.hover(function() {
-					$(this).find('.photo-details').toggleClass("hide");
-					$(this).find('img').toggleClass("fade");
-				});
-				
-			}, (i * 500));
-		  });
-		  
-		  }, 1000);
-		  
 		});
-	})();
+		
+		
+		
+		setTimeout(function() {
+		// Clear Gallery
+		$('#gallery').find('.gallery-item').each(function() {
+			$(this).css("display","none");
+		});
+		getData(flickerFeedUrl);
+		},500);
+	}
 </script>
 
 <style>
@@ -108,34 +147,32 @@ body {
 }
 
 #gallery{
+	width : 80%;
 	display: block;
     margin-left: auto;
-    margin-right: auto
+    margin-right: auto;
 }
 
 .gallery-item {
     position: absolute;
-	top: 500px;
     left: 80px;
     width: 0px;
     height: 0px;
     margin: 0px;
-	padding : 2px 2px 2px 2px;
-	background-color: white;
 }
 
 .photo {
-	margin-top: 4px;
 	display: block;
     margin-left: auto;
     margin-right: auto;
-	width: 95%;
-	height: 95%;
+	width: 100%;
+	height: 100%;
 }
 
 .photo-details {
 	position: absolute;
 	left: -1%;
+	top: 0;
 }
 
 a.loading{
@@ -159,36 +196,6 @@ a.loading{
 a.loading:hover{
 	opacity:1.0;
 }
-
-<!-- .gallery-item {
-	-webkit-transition: all 0.2s ease-in 0s;
-	-moz-transition: all 0.2s ease-in 0s;
-	-o-transition: all 0.2s ease-in 0s;
-	transition: all 0.2s ease-in 0s;
-}  -->
-<!-- 
-.gallery-item:hover{
-	left: -100%;
-} -->
-<!-- .gallery-item .photo-details {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	padding: 10px;
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;	
-	background: rgba(0,0,0,0.4);
-	color: #fff;
-	top: 100%;
-	-webkit-transition: all 0.5s ease-in 0s;
-	-moz-transition: all 0.5s ease-in 0s;
-	-o-transition: all 0.5s ease-in 0s;
-	transition: all 0.5s ease-in 0s;
-}
-.gallery-item:hover .photo-details {
-	top: 0;
-} -->
 
 .hide {
 	display:none;
@@ -221,7 +228,7 @@ a.loading:hover{
 
 
 #box {
-    margin-top: 455px;
+	bottom: 40px;
     position: fixed;
     left: 40px;
 }
@@ -301,7 +308,7 @@ a.loading:hover{
 		<span>Load Flickr</span>
 	</a>
 	
-	<div id="gallery"></id>
+	<div id="gallery"></div>
 	<div id="box">
 		<img class="boxCover" src="boxCover.png" />
 		<img class="boxBody" src="boxBody.png" />
