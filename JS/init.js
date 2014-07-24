@@ -142,7 +142,6 @@ function ClearGallery() {
 
     $.each([12, 3, 7, 18, 5, 0, 16, 6, 1, 17, 11, 2, 10, 4, 8, 13, 9, 14, 15, 19], function (index, value) {
         rotate = randomRotate();
-        console.log(rotate);
         setTimeout(function () {
             $('.wrapper' + value).animate({
                 width: '150px',
